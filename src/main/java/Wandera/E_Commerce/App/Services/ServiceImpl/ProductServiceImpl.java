@@ -3,6 +3,8 @@ package Wandera.E_Commerce.App.Services.ServiceImpl;
 import Wandera.E_Commerce.App.Dtos.ProductRequest;
 import Wandera.E_Commerce.App.Dtos.ProductResponse;
 import Wandera.E_Commerce.App.Entities.*;
+import Wandera.E_Commerce.App.Exceptions.ResourceNotFoundException;
+import Wandera.E_Commerce.App.Exceptions.UnauthorizedException;
 import Wandera.E_Commerce.App.Mapper.ProductMapper;
 import Wandera.E_Commerce.App.Repositories.CategoryRepository;
 import Wandera.E_Commerce.App.Repositories.ProductRepository;
@@ -31,33 +33,34 @@ public class ProductServiceImpl {
     @CacheEvict(value = "ProductResponse", allEntries = true)
     public ProductResponse addProduct(ProductRequest productRequest) {
 
-        log.info(productRequest.getProductName()+" Is added successfully");
-
 
         // 1. Get logged-in user
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getName() == null) {
-            throw new RuntimeException("No logged-in user found");
+            throw new UnauthorizedException("No logged-in user found");
+
         }
+
 
         String email = auth.getName();
 
         // 2. Find user by email
         UserEntity user = userEntityRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // 3. Ensure user is a SELLER
-        if (user.getRole() != Role.SELLER) {
-            throw new RuntimeException("Only sellers can add products");
+        if (user.getRole() == Role.USER) {
+            throw new UnauthorizedException("Only sellers can add products");
         }
+        log.info(productRequest.getProductName()+" Is added successfully");
 
         // 4. Ensure seller already created a seller profile
         SellerProfile seller = sellerProfileRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("You must complete your seller profile before adding products"));
+                .orElseThrow(() -> new UnauthorizedException("You must complete your seller profile before adding products"));
 
         // 5. Validate category
         Category category = categoryRepository.findByCategoryName(productRequest.getCategoryName())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         // 6. Build product entity
         Product product = Product.builder()
@@ -83,6 +86,7 @@ public class ProductServiceImpl {
     public List<ProductResponse> getProductByName(String productName) {
 
         log.info(productName+" Is found successfully");
+
         List<Product> products =  productRepository.findAllByProductNameIgnoreCase(productName);
 
         // If list is empty → return all products
@@ -103,7 +107,7 @@ public class ProductServiceImpl {
     @CacheEvict(value = "ProductResponse", key = "#id")
     public String  deleteProduct(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(("Product not found")));
+                .orElseThrow(() -> new ResourceNotFoundException(("Product not found")));
        productRepository.delete(product);
        return "Product has been deleted successfully";
     }
@@ -114,7 +118,7 @@ public class ProductServiceImpl {
         log.info("{} Is updated successfully", productRequest.getProductName());
 
         Product product = productRepository.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException(("Product id not available")));
+                .orElseThrow(() -> new ResourceNotFoundException(("Product id not available")));
 
         if (Objects.nonNull(product.getProductName())&&!"".equals(product.getProductName())) {
             product.setProductName(productRequest.getProductName());

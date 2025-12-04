@@ -3,6 +3,9 @@ package Wandera.E_Commerce.App.Services.ServiceImpl;
 import Wandera.E_Commerce.App.Dtos.CategoryRequest;
 import Wandera.E_Commerce.App.Dtos.CategoryResponse;
 import Wandera.E_Commerce.App.Entities.Category;
+import Wandera.E_Commerce.App.Entities.Role;
+import Wandera.E_Commerce.App.Entities.UserEntity;
+import Wandera.E_Commerce.App.Exceptions.UnauthorizedException;
 import Wandera.E_Commerce.App.Mapper.CategoryMapper;
 import Wandera.E_Commerce.App.Repositories.CategoryRepository;
 import Wandera.E_Commerce.App.Services.Interfaces.CategoryInterface;
@@ -22,10 +25,18 @@ import java.util.Objects;
 public class CategoryServiceImpl implements CategoryInterface {
 
     private final CategoryRepository categoryRepository;
+    private final UserEntityImplementation userEntityImplementation;
 
     @CacheEvict(value = "CategoryResponse", allEntries = true)
     @Override
     public CategoryResponse addCategory(CategoryRequest categoryRequest) {
+
+        UserEntity user= userEntityImplementation.getLoggedInUser();
+
+        if (user.getRole()== Role.USER){
+            throw new UnauthorizedException("You are not allowed to add category");
+
+        }
 
         log.info("addCategory "+ categoryRequest);
 

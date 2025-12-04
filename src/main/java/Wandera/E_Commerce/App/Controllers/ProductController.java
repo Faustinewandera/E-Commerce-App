@@ -18,13 +18,8 @@ public class ProductController {
     @PostMapping("/addProduct")
     @ResponseStatus(HttpStatus.CREATED)
     public ProductResponse addProduct(@RequestBody ProductRequest productRequest) {
-        try {
-          return  productService.addProduct(productRequest);
-        }catch (Exception ex){
-            throw new RuntimeException("adding product failed try again");
 
-        }
-
+        return productService.addProduct(productRequest);
     }
 
     @GetMapping("/getAllProduct")

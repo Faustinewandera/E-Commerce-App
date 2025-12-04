@@ -4,6 +4,9 @@ import Wandera.E_Commerce.App.Dtos.CartItemResponse;
 import Wandera.E_Commerce.App.Dtos.CartRequest;
 import Wandera.E_Commerce.App.Dtos.CartResponse;
 import Wandera.E_Commerce.App.Entities.*;
+import Wandera.E_Commerce.App.Exceptions.BadRequestException;
+import Wandera.E_Commerce.App.Exceptions.ResourceNotFoundException;
+import Wandera.E_Commerce.App.Exceptions.UnauthorizedException;
 import Wandera.E_Commerce.App.Repositories.CartItemRepository;
 import Wandera.E_Commerce.App.Repositories.CartRepository;
 import Wandera.E_Commerce.App.Repositories.ProductRepository;
@@ -28,8 +31,13 @@ public class CartServiceImplementation implements CartInterface {
 
             UserEntity user =userEntityImplementation .getLoggedInUser();
 
+            if (user==null) {
+                throw new UnauthorizedException("You are not logged in. Please login again.");
+
+            }
+
         if (user.getRole() == Role.SELLER) {
-            throw new RuntimeException("Sellers cannot place orders or have a cart");
+            throw new UnauthorizedException("Sellers cannot place orders or have a cart");
         }
 
             Cart cart = user.getCart();
@@ -44,7 +52,7 @@ public class CartServiceImplementation implements CartInterface {
             }
 
             Product product = productRepository.findById(request.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
             CartItem cartItem = cart.getItems() != null ?
                     cart.getItems().stream()
@@ -80,7 +88,7 @@ public class CartServiceImplementation implements CartInterface {
         Cart cart = user.getCart();
 
         if (cart == null || cart.getItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new BadRequestException("Cart is empty");
         }
 
         // Find the item in the cart

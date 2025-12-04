@@ -1,11 +1,9 @@
 package Wandera.E_Commerce.App.Controllers;
 
-import Wandera.E_Commerce.App.Dtos.CategoryRequest;
-import Wandera.E_Commerce.App.Dtos.CategoryResponse;
-import Wandera.E_Commerce.App.Dtos.ProductRequest;
-import Wandera.E_Commerce.App.Dtos.ProductResponse;
+import Wandera.E_Commerce.App.Dtos.*;
 import Wandera.E_Commerce.App.Services.ServiceImpl.CartServiceImplementation;
 import Wandera.E_Commerce.App.Services.ServiceImpl.CategoryServiceImpl;
+import Wandera.E_Commerce.App.Services.ServiceImpl.OrderEntityServiceImplementation;
 import Wandera.E_Commerce.App.Services.ServiceImpl.ProductServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +21,7 @@ public class AdminController {
     private final CategoryServiceImpl categoryServiceImpl;
     private final ProductServiceImpl productService;
     private final CartServiceImplementation cartServiceImplementation;
+    private final OrderEntityServiceImplementation orderEntityServiceImplementation;
 
     @PostMapping("/addCategory")
     @ResponseStatus(HttpStatus.CREATED)
@@ -62,5 +61,15 @@ public class AdminController {
     public ResponseEntity<?> deleteCartItem(@PathVariable Long id) {
         cartServiceImplementation.deleteCartItem(id);
         return ResponseEntity.ok("Cart item deleted successfully");
+    }
+    @GetMapping("/getAllOrder")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public List<OrderResponse> getAllOrder() {
+        return orderEntityServiceImplementation.getAllOrder();
+    }
+    @GetMapping("/getByOrderId")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public OrderResponse findByOrderId(@PathVariable String orderNumber) {
+        return orderEntityServiceImplementation.getByOrderId(orderNumber);
     }
 }

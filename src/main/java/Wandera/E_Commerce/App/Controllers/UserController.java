@@ -21,4 +21,5 @@ public class UserController {
     public ProfileResponse registerUser(@Valid @RequestBody ProfileRequest profileRequest) {
         return userEntityImplementation.registerUser(profileRequest);
     }
+
 }

@@ -1,4 +1,4 @@
-package Wandera.E_Commerce.App.Confi;
+package Wandera.E_Commerce.App.SecurityConfiguration;
 
 import Wandera.E_Commerce.App.Entities.UserEntity;
 import Wandera.E_Commerce.App.Repositories.UserEntityRepository;
@@ -24,10 +24,7 @@ public class AppUserDetailService implements UserDetailsService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-        );
+        return new CustomUserDetails(user);
+
     }
 }

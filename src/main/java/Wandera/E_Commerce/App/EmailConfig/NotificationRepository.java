@@ -1,6 +1,5 @@
-package Wandera.E_Commerce.App.Repositories;
+package Wandera.E_Commerce.App.EmailConfig;
 
-import Wandera.E_Commerce.App.Entities.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

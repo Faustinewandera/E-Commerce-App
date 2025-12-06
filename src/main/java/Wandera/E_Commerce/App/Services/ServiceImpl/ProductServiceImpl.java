@@ -2,6 +2,7 @@ package Wandera.E_Commerce.App.Services.ServiceImpl;
 
 import Wandera.E_Commerce.App.Dtos.ProductRequest;
 import Wandera.E_Commerce.App.Dtos.ProductResponse;
+import Wandera.E_Commerce.App.Enum.Role;
 import Wandera.E_Commerce.App.Entities.*;
 import Wandera.E_Commerce.App.Exceptions.ResourceNotFoundException;
 import Wandera.E_Commerce.App.Exceptions.UnauthorizedException;

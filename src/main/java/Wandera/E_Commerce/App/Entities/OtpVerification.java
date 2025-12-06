@@ -9,19 +9,18 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
+@Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
 @Builder
-public class Notification {
+public class OtpVerification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String otpCode;
+    private LocalDateTime expiryTime;
+
     @ManyToOne
-    private UserEntity user; // The seller receiving notification
-
-    private String message;
-
-    private LocalDateTime createdAt;
+    private UserEntity user;
 }

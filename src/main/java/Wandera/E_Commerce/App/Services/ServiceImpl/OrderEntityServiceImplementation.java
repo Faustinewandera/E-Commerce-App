@@ -3,9 +3,12 @@ package Wandera.E_Commerce.App.Services.ServiceImpl;
 import Wandera.E_Commerce.App.Dtos.OrderItemResponse;
 import Wandera.E_Commerce.App.Dtos.OrderRequest;
 import Wandera.E_Commerce.App.Dtos.OrderResponse;
+import Wandera.E_Commerce.App.EmailConfig.EmailService;
+import Wandera.E_Commerce.App.Enum.PaymentStatus;
+import Wandera.E_Commerce.App.EmailConfig.Notification;
 import Wandera.E_Commerce.App.Entities.*;
 import Wandera.E_Commerce.App.Repositories.CartRepository;
-import Wandera.E_Commerce.App.Repositories.NotificationRepository;
+import Wandera.E_Commerce.App.EmailConfig.NotificationRepository;
 import Wandera.E_Commerce.App.Repositories.OrderEntityRepository;
 import Wandera.E_Commerce.App.Repositories.OrderItemRepository;
 import Wandera.E_Commerce.App.Services.Interfaces.OrderEntityInterface;
@@ -76,7 +79,7 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
                                         "Location: " + user.getCountry();
 
                         // ✔ sending email
-                        emailService.sendEmail(
+                        emailService.sendEmailToSeller(
                                 seller.getEmail(),
                                 "You made a sale!",
                                 message

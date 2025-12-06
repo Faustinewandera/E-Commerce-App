@@ -1,5 +1,6 @@
 package Wandera.E_Commerce.App.Entities;
 
+import Wandera.E_Commerce.App.Enum.Role;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -69,6 +70,9 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<OrderEntity> orders;
+
+    private boolean verified = false;
+
 
 
 }

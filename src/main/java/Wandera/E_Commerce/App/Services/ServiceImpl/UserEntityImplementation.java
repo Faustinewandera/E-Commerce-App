@@ -1,21 +1,22 @@
 package Wandera.E_Commerce.App.Services.ServiceImpl;
 
 import Wandera.E_Commerce.App.Dtos.ProfileRequest;
-import Wandera.E_Commerce.App.Dtos.ProfileResponse;
-import Wandera.E_Commerce.App.Entities.Role;
+import Wandera.E_Commerce.App.Enum.Role;
 import Wandera.E_Commerce.App.Entities.UserEntity;
-import Wandera.E_Commerce.App.Mapper.ProfileMapper;
 import Wandera.E_Commerce.App.Repositories.UserEntityRepository;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,10 +27,12 @@ public class UserEntityImplementation {
 
     private final PasswordEncoder passwordEncoder;
     private final UserEntityRepository userEntityRepository;
+    private final OtpVerificationServiceImplementation otpVerificationServiceImplementation;
 
     @CacheEvict(value = "ProfileResponse",allEntries = true)
     @Cacheable(value = "ProfileResponse", key = "#profileRequest.getEmail()") //cache
-    public ProfileResponse registerUser(ProfileRequest profileRequest) {
+    public ResponseEntity<?> registerUser(ProfileRequest profileRequest) throws MessagingException, IOException {
+
         Optional<UserEntity> existingUser = userEntityRepository.findByEmail(profileRequest.getEmail());
 
         if (existingUser.isPresent()) {
@@ -58,13 +61,17 @@ public class UserEntityImplementation {
         userEntity.setCountry(profileRequest.getCountry());
         userEntity.setCreatedAt(LocalDateTime.now());
         userEntity.setUpdatedAt(LocalDateTime.now());
+        userEntity.setVerified(false);
         userEntity.setPhoneNumber(profileRequest.getPhoneNumber());
         userEntity.setRole(assignedRole);
 
-        var savedUser= userEntityRepository.save(userEntity);
+         var savedUser=userEntityRepository.save(userEntity);
 
+        // Delegate OTP logic
+        otpVerificationServiceImplementation.verifyEmailAdress(savedUser);
 
-       return ProfileMapper.toDto(savedUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+
     }
 
     public UserEntity getLoggedInUser() {

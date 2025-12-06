@@ -3,7 +3,7 @@ package Wandera.E_Commerce.App.Services.ServiceImpl;
 import Wandera.E_Commerce.App.Dtos.CategoryRequest;
 import Wandera.E_Commerce.App.Dtos.CategoryResponse;
 import Wandera.E_Commerce.App.Entities.Category;
-import Wandera.E_Commerce.App.Entities.Role;
+import Wandera.E_Commerce.App.Enum.Role;
 import Wandera.E_Commerce.App.Entities.UserEntity;
 import Wandera.E_Commerce.App.Exceptions.UnauthorizedException;
 import Wandera.E_Commerce.App.Mapper.CategoryMapper;

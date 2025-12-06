@@ -1,4 +1,4 @@
-package Wandera.E_Commerce.App.Entities;
+package Wandera.E_Commerce.App.Enum;
 
 public enum PaymentStatus {
 

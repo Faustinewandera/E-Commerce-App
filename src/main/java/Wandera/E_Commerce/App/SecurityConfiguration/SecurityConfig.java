@@ -1,4 +1,4 @@
-package Wandera.E_Commerce.App.Confi;
+package Wandera.E_Commerce.App.SecurityConfiguration;
 
 import Wandera.E_Commerce.App.Filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,10 @@ public class SecurityConfig {
                                         "/auth/**",
                                         "/product/name/**",
                                         "/byName/**",
+                                        "/api/verify",
+                                        "/api/resendCode",
                                         "/product/getAllProduct"
+
                                 ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/seller/**").hasAnyRole("SELLER", "ADMIN")

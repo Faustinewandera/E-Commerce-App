@@ -1,6 +1,8 @@
 package Wandera.E_Commerce.App.Controllers;
 
-import Wandera.E_Commerce.App.Confi.AppUserDetailService;
+import Wandera.E_Commerce.App.Entities.UserEntity;
+import Wandera.E_Commerce.App.Repositories.UserEntityRepository;
+import Wandera.E_Commerce.App.SecurityConfiguration.AppUserDetailService;
 import Wandera.E_Commerce.App.Dtos.LoginRequest;
 import Wandera.E_Commerce.App.Dtos.LoginResponse;
 import Wandera.E_Commerce.App.Jwt.JwtService;
@@ -34,16 +36,27 @@ public class AuthController {
 
         private final AuthenticationManager authenticationManager;
         private final AppUserDetailService userDetailService;
+        private final UserEntityRepository userEntityRepository;
         private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
         @Cacheable(value = "LoginResponse", key = "#loginRequest.getEmail()")
         public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+
+        UserEntity user=userEntityRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(()->new RuntimeException("User email not found"));
+
+        //this check first if user is verified in if not, not allowed to log in
+        if (!user.isVerified()) {
+            throw new RuntimeException("Please verify your account before logging in.");
+        }
+
             log.info("logged in:{}", loginRequest);
             try{
                 authenticate(loginRequest.getEmail(),loginRequest.getPassword());
                 final UserDetails userDetails=userDetailService.loadUserByUsername(loginRequest.getEmail());
+
                 String jwtToken=jwtService.generateToken(userDetails);
                 ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
                         .httpOnly(true)

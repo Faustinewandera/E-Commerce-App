@@ -2,7 +2,7 @@ package Wandera.E_Commerce.App.Services.ServiceImpl;
 
 import Wandera.E_Commerce.App.Dtos.SellerProfileRequest;
 import Wandera.E_Commerce.App.Dtos.SellerResponse;
-import Wandera.E_Commerce.App.Entities.Role;
+import Wandera.E_Commerce.App.Enum.Role;
 import Wandera.E_Commerce.App.Entities.SellerProfile;
 import Wandera.E_Commerce.App.Entities.UserEntity;
 import Wandera.E_Commerce.App.Mapper.SellerMapper;

@@ -1,4 +1,4 @@
-package Wandera.E_Commerce.App.Dtos;
+package Wandera.E_Commerce.App.EmailConfig;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -35,7 +37,7 @@ public class ProductServiceImpl {
     public ProductResponse addProduct(ProductRequest productRequest) {
 
 
-        // 1. Get logged-in user
+        // Gets logged-in user
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getName() == null) {
             throw new UnauthorizedException("No logged-in user found");
@@ -141,11 +143,13 @@ public class ProductServiceImpl {
 
     }
 
-    public List<ProductResponse> getAllProduct() {
-       return productRepository.findAll()
+    public List<ProductResponse> getAllProduct(int size,int page) {
+        Pageable pageable = PageRequest.of(page, size);
+       return productRepository.findAll(pageable)
                 .stream()
                 .map(ProductMapper::toDto)
                 .toList();
+
     }
 }
 

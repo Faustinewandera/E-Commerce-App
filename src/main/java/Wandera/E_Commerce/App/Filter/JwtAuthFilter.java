@@ -3,7 +3,6 @@ package Wandera.E_Commerce.App.Filter;
 import Wandera.E_Commerce.App.Jwt.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,46 +32,34 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        final String authHeader = request.getHeader("Authorization");
+
+
         // Skip JWT validation for public endpoints
         String requestPath = request.getServletPath();
-        if (requestPath.contains("/register") || requestPath.contains("/login") || requestPath.contains("/authenticate")) {
+        if (requestPath.contains("/register") || requestPath.contains("/api/verify") || requestPath.contains("/api/resendCode") || requestPath.contains("/login") || requestPath.contains("/authenticate")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String authHeader = request.getHeader("Authorization");
-        String jwt = null;
-        String userEmail = null;
-
-        // Try from Authorization header first
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
-            userEmail = jwtService.extractEmail(jwt);
-        }
-        // If there is no Authorization header, try from cookies
-        else {
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if ("jwt".equals(cookie.getName())) {
-                        jwt = cookie.getValue();
-                        userEmail = jwtService.extractEmail(jwt);
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (jwt == null || userEmail == null) {
+        // No token → continue (will fail later if endpoint is protected)
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Authenticating user if not already authenticated
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+        String jwt = authHeader.substring(7);
+        String username = jwtService.extractEmail(jwt);
+
+        // Validate token only if user is not authenticated yet
+        if (username != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(username);
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
+
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,
@@ -80,16 +67,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()
                         );
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authToken);
             }
         }
-
-
         // after successful authentication, We get the logged-in user with the email
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         System.out.println("Logged-in user: " + currentUserEmail);
 
+
         filterChain.doFilter(request, response);
     }
+
+
 }

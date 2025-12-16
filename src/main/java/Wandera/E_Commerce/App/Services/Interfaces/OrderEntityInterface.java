@@ -9,7 +9,8 @@ import java.util.List;
 public interface OrderEntityInterface {
     OrderResponse placeOrder(OrderRequest orderRequest);
 
-    List<OrderResponse> getAllOrder();
+
+    List<OrderResponse> getAllOrder(int page, int size);
 
     OrderResponse getByOrderId(String orderNumber);
 }

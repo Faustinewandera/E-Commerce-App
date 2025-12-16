@@ -14,6 +14,8 @@ import Wandera.E_Commerce.App.Repositories.OrderItemRepository;
 import Wandera.E_Commerce.App.Services.Interfaces.OrderEntityInterface;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -137,9 +139,11 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
     }
 
     @Override
-    public List<OrderResponse> getAllOrder() {
+    public List<OrderResponse> getAllOrder(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
 
-        List<OrderEntity> orders = orderRepository.findByOrderByCreatedAtDesc();
+
+        List<OrderEntity> orders = orderRepository.findByOrderByCreatedAtDesc(pageable);
 
         return orders.stream().map(order -> {
 

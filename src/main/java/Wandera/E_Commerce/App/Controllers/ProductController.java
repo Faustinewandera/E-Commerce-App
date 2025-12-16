@@ -24,8 +24,13 @@ public class ProductController {
 
     @GetMapping("/getAllProduct")
     @ResponseStatus(HttpStatus.OK)
-    public List<ProductResponse> getAllProduct(){
-        return productService.getAllProduct();
+    public List<ProductResponse> getAllProduct(
+
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+
+    ){
+        return productService.getAllProduct(page, size);
 
     }
     @GetMapping("/name/{productName}")

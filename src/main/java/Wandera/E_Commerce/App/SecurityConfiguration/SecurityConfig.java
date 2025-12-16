@@ -39,6 +39,7 @@ public class SecurityConfig {
                                         "/api/verify",
                                         "/api/resendCode",
                                         "/product/getAllProduct"
+//                                        "/api/resend_Token"
 
                                 ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -51,8 +52,6 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                .sessionManagement(session
-                        -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(AbstractHttpConfigurer::disable);
 

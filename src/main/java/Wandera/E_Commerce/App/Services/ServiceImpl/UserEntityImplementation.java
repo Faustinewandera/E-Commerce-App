@@ -1,13 +1,17 @@
 package Wandera.E_Commerce.App.Services.ServiceImpl;
 
 import Wandera.E_Commerce.App.Dtos.ProfileRequest;
+import Wandera.E_Commerce.App.Dtos.UserResponse;
 import Wandera.E_Commerce.App.Enum.Role;
 import Wandera.E_Commerce.App.Entities.UserEntity;
+import Wandera.E_Commerce.App.Mapper.UserMapper;
 import Wandera.E_Commerce.App.Repositories.UserEntityRepository;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,6 +55,7 @@ public class UserEntityImplementation {
             assignedRole = Role.valueOf(profileRequest.getRole());
         }
 
+        //creates instance of  the userEntity
         UserEntity userEntity = new UserEntity();
         userEntity.setUserId(UUID.randomUUID().toString());
         userEntity.setFirstName(profileRequest.getFirstName());
@@ -74,6 +80,7 @@ public class UserEntityImplementation {
 
     }
 
+    //this get the logged-in user from security context holder
     public UserEntity getLoggedInUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -87,4 +94,14 @@ public class UserEntityImplementation {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    public List<UserResponse> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+         var users= userEntityRepository.findAll(pageable);
+
+        // Convert each UserEntity to UserResponse
+        return users.stream()
+                .map(UserMapper::toDto)
+                .toList();
+
+    }
 }

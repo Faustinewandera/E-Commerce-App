@@ -20,12 +20,13 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
+    //this method  generate token
     public String generateToken(UserDetails userDetails) {
         return Jwts
                 .builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))//10h
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 3))//10h
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
     }

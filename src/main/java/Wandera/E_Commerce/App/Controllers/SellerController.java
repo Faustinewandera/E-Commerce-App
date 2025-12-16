@@ -25,8 +25,11 @@ public class SellerController {
     }
     @GetMapping("/getAllOrder")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public List<OrderResponse> getAllOrder() {
-        return orderEntityServiceImplementation.getAllOrder();
+    public List<OrderResponse> getAllOrder(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return orderEntityServiceImplementation.getAllOrder(page, size);
     }
 
     @GetMapping("/getByOrderId")

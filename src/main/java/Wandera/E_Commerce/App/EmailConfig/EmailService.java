@@ -23,7 +23,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
+    public static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
 
     @Async
@@ -120,4 +120,29 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    //this sends the email for the resend
+    public void sendOtp(String to, String subject, String templateName, Map<String, String> variables) throws IOException, MessagingException {
+        String templatePath = "Template/" + templateName;
+
+        // this loads HTML template
+        ClassLoader classLoader = getClass().getClassLoader();
+        String htmlContent = new String(classLoader.getResourceAsStream(templatePath).readAllBytes());
+
+        // Replace template values
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            htmlContent = htmlContent.replace("{{" + entry.getKey() + "}}", entry.getValue());
+        }
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+    }
+
+
 }

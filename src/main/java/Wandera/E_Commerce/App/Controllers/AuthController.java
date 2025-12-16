@@ -6,6 +6,7 @@ import Wandera.E_Commerce.App.SecurityConfiguration.AppUserDetailService;
 import Wandera.E_Commerce.App.Dtos.LoginRequest;
 import Wandera.E_Commerce.App.Dtos.LoginResponse;
 import Wandera.E_Commerce.App.Jwt.JwtService;
+import Wandera.E_Commerce.App.Services.ServiceImpl.LoginServiceImplementation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -34,68 +35,16 @@ import java.util.Map;
 @RequestMapping("/auth")
 public class AuthController {
 
-        private final AuthenticationManager authenticationManager;
-        private final AppUserDetailService userDetailService;
-        private final UserEntityRepository userEntityRepository;
-        private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
+        private final PasswordEncoder passwordEncoder;
+        private final LoginServiceImplementation loginServiceImplementation;
 
-    @PostMapping("/login")
+       @PostMapping("/login")
         @Cacheable(value = "LoginResponse", key = "#loginRequest.getEmail()")
         public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
 
-        UserEntity user=userEntityRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(()->new RuntimeException("User email not found"));
+           return loginServiceImplementation.login(loginRequest);
 
-        //this check first if user is verified in if not, not allowed to log in
-        if (!user.isVerified()) {
-            throw new RuntimeException("Please verify your account before logging in.");
-        }
-
-            log.info("logged in:{}", loginRequest);
-            try{
-                authenticate(loginRequest.getEmail(),loginRequest.getPassword());
-                final UserDetails userDetails=userDetailService.loadUserByUsername(loginRequest.getEmail());
-
-                String jwtToken=jwtService.generateToken(userDetails);
-                ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
-                        .httpOnly(true)
-                        .secure(true)
-                        .path("/")
-                        .maxAge(Duration.ofDays(1))
-                        .sameSite("strict")
-                        .build();
-                return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookie.toString())
-                        .body(new LoginResponse(loginRequest.getEmail(),jwtToken));
-
-
-            } catch (BadCredentialsException ex) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("error", true);
-                response.put("message", "Incorrect email or password");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body( response);
-
-            }
-            catch (DisabledException ex) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("error", true);
-                response.put("message", "account is disabled");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body( response);
-
-            }
-            catch (Exception e) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("error", true);
-                response.put("message", "Authentication Failed");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body( response);
-
-            }
-        }
-
-        private void authenticate(String email, String password) {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        }
-
+       }
         @PostMapping("/encode")
         public String adminPasswordEncoder(@RequestBody Map<String, String> request) {
             return passwordEncoder.encode(request.get("password"));

@@ -22,12 +22,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public @Nullable String getPassword() {
-        return "password";
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return "email";
+        return user.getEmail();
     }
 
     @Override

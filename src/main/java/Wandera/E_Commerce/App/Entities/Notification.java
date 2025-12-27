@@ -1,6 +1,5 @@
-package Wandera.E_Commerce.App.EmailConfig;
+package Wandera.E_Commerce.App.Entities;
 
-import Wandera.E_Commerce.App.Entities.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

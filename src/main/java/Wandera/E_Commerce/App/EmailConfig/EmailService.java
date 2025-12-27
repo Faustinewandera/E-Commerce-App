@@ -2,8 +2,6 @@ package Wandera.E_Commerce.App.EmailConfig;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +10,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 
@@ -23,26 +25,42 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+
     public static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
 
+    //this sends notification to the seller
     @Async
-    public void sendEmailToSeller(String to, String subject, String body) {
+    public void sendEmailToSeller(
+            String to,
+            String subject,
+            String templateName,
+            Map<String, String> variables
+    ) throws MessagingException, IOException {
 
-        try {
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setTo(to);
-            msg.setSubject(subject);
-            msg.setText(body);
-            mailSender.send(msg);
+        String templatePath = "Template/" + templateName ;
 
-            log.info("Email successfully sent to {}", to);
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(templatePath);
 
-        } catch (Exception e) {
-            log.error("Failed to send email to {}: {}", to, e.getMessage(), e);
+        if (inputStream == null) {
+            throw new FileNotFoundException("Email template not found: " + templatePath);
         }
-    }
 
+        String htmlContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            htmlContent = htmlContent.replace("{{" + entry.getKey() + "}}", entry.getValue());
+        }
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+    }
 
     // this sends email containing  the otp code for reset password that user forget
     @Async
@@ -122,6 +140,7 @@ public class EmailService {
     }
 
     //this sends the email for the resend
+    @Async
     public void sendOtp(String to, String subject, String templateName, Map<String, String> variables) throws IOException, MessagingException {
         String templatePath = "Template/" + templateName;
 
@@ -144,5 +163,34 @@ public class EmailService {
         mailSender.send(message);
     }
 
+
+    //this sends notification email to the buyer after placing the order
+    @Async
+    public void sendEmailToBuyer(
+            String to,
+            String subject,
+            String templateName,
+            Map<String, String> variables
+    ) throws MessagingException, IOException {
+        String templatePath = "Template/" + templateName + ".html";
+
+        // this loads HTML template
+        ClassLoader classLoader = getClass().getClassLoader();
+        String htmlContent = new String(classLoader.getResourceAsStream(templatePath).readAllBytes());
+
+        // Replace template values
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            htmlContent = htmlContent.replace("{{" + entry.getKey() + "}}", entry.getValue());
+        }
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+    }
 
 }

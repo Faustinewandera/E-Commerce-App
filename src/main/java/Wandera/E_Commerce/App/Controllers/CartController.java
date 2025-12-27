@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
     private final CartServiceImplementation cartServiceImplementation;
 
-    @PostMapping("/add")
+    @PostMapping("/add_to_cart")
     @ResponseStatus(HttpStatus.CREATED)
     public CartResponse addToCart(@RequestBody CartRequest request) {
         return cartServiceImplementation.addToCart(request);

@@ -1,4 +1,4 @@
-package Wandera.E_Commerce.App.EmailConfig;
+package Wandera.E_Commerce.App.Repositories;
 
 import Wandera.E_Commerce.App.Entities.PasswordResetToken;
 import Wandera.E_Commerce.App.Entities.UserEntity;

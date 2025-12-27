@@ -1,6 +1,8 @@
-package Wandera.E_Commerce.App.EmailConfig;
+package Wandera.E_Commerce.App.Controllers;
 
 import Wandera.E_Commerce.App.Dtos.ResetPasswordRequest;
+import Wandera.E_Commerce.App.Dtos.ForgetPasswordRequest;
+import Wandera.E_Commerce.App.Services.ServiceImpl.PasswordResetTokenService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

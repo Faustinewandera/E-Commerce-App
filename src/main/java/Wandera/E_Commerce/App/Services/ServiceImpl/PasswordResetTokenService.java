@@ -1,10 +1,13 @@
-package Wandera.E_Commerce.App.EmailConfig;
+package Wandera.E_Commerce.App.Services.ServiceImpl;
 
 import Wandera.E_Commerce.App.Dtos.ResetPasswordRequest;
+import Wandera.E_Commerce.App.EmailConfig.EmailService;
+import Wandera.E_Commerce.App.Dtos.ForgetPasswordRequest;
 import Wandera.E_Commerce.App.Entities.PasswordResetToken;
 import Wandera.E_Commerce.App.Entities.UserEntity;
 import Wandera.E_Commerce.App.Exceptions.BadRequestException;
 import Wandera.E_Commerce.App.Exceptions.ResourceNotFoundException;
+import Wandera.E_Commerce.App.Repositories.PasswordResetTokenRepository;
 import Wandera.E_Commerce.App.Repositories.UserEntityRepository;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;

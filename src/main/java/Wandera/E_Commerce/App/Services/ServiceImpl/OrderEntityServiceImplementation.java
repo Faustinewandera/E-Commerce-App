@@ -3,21 +3,20 @@ package Wandera.E_Commerce.App.Services.ServiceImpl;
 import Wandera.E_Commerce.App.Dtos.OrderItemResponse;
 import Wandera.E_Commerce.App.Dtos.OrderRequest;
 import Wandera.E_Commerce.App.Dtos.OrderResponse;
-import Wandera.E_Commerce.App.EmailConfig.EmailService;
 import Wandera.E_Commerce.App.Enum.PaymentStatus;
-import Wandera.E_Commerce.App.EmailConfig.Notification;
 import Wandera.E_Commerce.App.Entities.*;
 import Wandera.E_Commerce.App.Repositories.CartRepository;
-import Wandera.E_Commerce.App.EmailConfig.NotificationRepository;
 import Wandera.E_Commerce.App.Repositories.OrderEntityRepository;
 import Wandera.E_Commerce.App.Repositories.OrderItemRepository;
 import Wandera.E_Commerce.App.Services.Interfaces.OrderEntityInterface;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,17 +26,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderEntityServiceImplementation implements OrderEntityInterface {
 
-
     private final UserEntityImplementation userService;
     private final OrderEntityRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
-    private final NotificationRepository notificationRepository;
-    private final EmailService emailService;
+    private final NotificationServiceImplementation notificationService;
 
     @Override
     @Transactional
-    public OrderResponse placeOrder(OrderRequest orderRequest) {
+    public OrderResponse placeOrder(OrderRequest orderRequest) throws MessagingException, IOException {
 
         UserEntity user = userService.getLoggedInUser();
         Cart cart = user.getCart();
@@ -58,6 +55,7 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
         // Convert CartItems → OrderItems
         List<OrderItem> orderItems = cart.getItems().stream()
                 .map(cartItem -> {
+
                     OrderItem item = OrderItem.builder()
                             .order(order)
                             .product(cartItem.getProduct())
@@ -67,53 +65,42 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
 
                     orderItemRepository.save(item);
 
-                    // ✔ Notify seller for each product sold
-                    SellerProfile seller = cartItem.getProduct().getSeller();
-                    if (seller != null) {
-
-                        String message =
-                                "New order received!\n" +
-                                        "Product: " + cartItem.getProduct().getProductName() + "\n" +
-                                        "Quantity: " + cartItem.getQuantity() + "\n" +
-                                        "SubTotal: " + cartItem.getSubTotal() +"\n" +
-                                        "Customer Email: " + user.getEmail() + "\n" +
-                                        "Phone: " + user.getPhoneNumber() + "\n" +
-                                        "Location: " + user.getCountry();
-
-                        // ✔ sending email
-                        emailService.sendEmailToSeller(
-                                seller.getEmail(),
-                                "You made a sale!",
-                                message
+                    // 🔔 Notify seller (delegated)
+                    try {
+                        notificationService.notifySellerOnOrder(
+                                cartItem.getProduct().getSeller(),
+                                item,
+                                user
                         );
-
-                        // ✔ save notification
-                        Notification notification = Notification.builder()
-                                .user(seller.getUser())
-                                .message("You have a new order for: " + cartItem.getProduct().getProductName())
-                                .createdAt(LocalDateTime.now())
-                                .build();
-
-                        notificationRepository.save(notification);
+                    } catch (MessagingException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
 
                     return item;
                 })
                 .collect(Collectors.toList());
 
-        // Save order amounts
+        // Save order totals
         order.setItems(orderItems);
-        double totalAmount = orderItems.stream().mapToDouble(OrderItem::getSubTotal).sum();
+        double totalAmount = orderItems.stream()
+                .mapToDouble(OrderItem::getSubTotal)
+                .sum();
         order.setTotalAmount(BigDecimal.valueOf(totalAmount));
 
-        // Handle payment method
+        // Payment status
         if ("CASH".equalsIgnoreCase(String.valueOf(orderRequest.getPaymentMethod()))) {
-            order.setStatus(PaymentStatus.valueOf("PAID"));
+            order.setStatus(PaymentStatus.PAID);
         } else {
-            order.setStatus(PaymentStatus.valueOf("PENDING")); // For M_PESA payment
+            order.setStatus(PaymentStatus.PENDING);
         }
 
         orderRepository.save(order);
+
+// 🔔 Notify buyer
+        notificationService.notifyBuyerOnOrderPlaced(user, order);
+
 
         // Clear cart
         cart.getItems().clear();
@@ -140,9 +127,8 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
 
     @Override
     public List<OrderResponse> getAllOrder(int page, int size) {
+
         Pageable pageable = PageRequest.of(page, size);
-
-
         List<OrderEntity> orders = orderRepository.findByOrderByCreatedAtDesc(pageable);
 
         return orders.stream().map(order -> {
@@ -153,8 +139,8 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
                             .productName(item.getProduct().getProductName())
                             .quantity(item.getQuantity())
                             .subTotal(item.getSubTotal())
-                            .build()
-                    ).collect(Collectors.toList());
+                            .build())
+                    .collect(Collectors.toList());
 
             return OrderResponse.builder()
                     .id(order.getId())
@@ -168,7 +154,6 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
 
     @Override
     public OrderResponse getByOrderId(String orderNumber) {
-        UserEntity user = userService.getLoggedInUser();
 
         OrderEntity order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -178,7 +163,7 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
                         .productId(item.getProduct().getProductId())
                         .productName(item.getProduct().getProductName())
                         .quantity(item.getQuantity())
-                        .subTotal(item.getSubTotal() * item.getQuantity()) // double * int
+                        .subTotal(item.getSubTotal() * item.getQuantity())
                         .build())
                 .toList();
 
@@ -189,5 +174,4 @@ public class OrderEntityServiceImplementation implements OrderEntityInterface {
                 .orderItems(itemResponses)
                 .build();
     }
-
 }
